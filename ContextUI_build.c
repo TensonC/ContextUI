@@ -7,7 +7,7 @@
 */
 
 
-#define TITLE_LEFT_OFFEST 8     //标题的左侧偏移值
+#define TITLE_LEFT_OFFEST 6     //标题的左侧偏移值
 #define WIDGET_RIGHT_OFFEST 25  //组件的右侧偏移值
 
 
@@ -22,7 +22,6 @@ static u16 Pow10[] = {
  1,10,100,1000,10000
 };
 
-static u8 select_style = SELECT_RECT;
 
 
 /*复选框的位置偏移参数 */
@@ -180,6 +179,8 @@ static void CUI_BuildTab(CUI_Tab* tab,u8 col)
     //绘制标题
     CUI_PutStr_16(TITLE_LEFT_OFFEST,col,tab -> name);
     //绘制组件
+    if(!tab->link_widget)
+        return;
     switch (tab->link_widget->widget_type)
     {
     case WIDGET_CHECKBOX:
@@ -190,9 +191,17 @@ static void CUI_BuildTab(CUI_Tab* tab,u8 col)
         CUI_BuildDot(SCREEN_W - dot_offest[0],col * PAGE + dot_offest[1],
         tab->link_widget->respond_value);
         break;
+    case WIDGET_PERCENTBAR:
     case WIDGET_NUMBER:
         CUI_BuildNum(SCREEN_W - 30,col,
         tab->link_widget->respond_value, 3);
+        break;
+    case WIDGET_STR:
+        CUI_PutStr_16(SCREEN_W - (8 * tab->link_widget->respond_value),col,
+        tab->link_widget->widget_name);
+        break;
+    case WIDGET_PAGE:
+        CUI_PutChar_16(SCREEN_W - WIDGET_RIGHT_OFFEST,col,'>');
         break;
     default:
         break;
@@ -203,15 +212,20 @@ static void CUI_BuildTab(CUI_Tab* tab,u8 col)
  * @brief 构建列表
  * @param list 要构建的列表的指针
  */
-void CUI_BuildList(CUI_List* list)
+void CUI_BuildList(CUI_LayerPointer* l_p)
 {
-    u8 i;
+    u8 i,j;
     CUI_Tab* tab;
+    CUI_List* list = l_p->cui_list_p;
     CUI_Clear();
-    for(i = 0 ;list->Tabs[i] != 0; i++) {
+    for(i = l_p->start_tab,j = 0 ;list->Tabs[i] != 0; i++,j++) {
         tab = list->Tabs[i];
-        CUI_BuildTab(tab,2 * i);
+        CUI_BuildTab(tab,2 * j);
     }
+    if(list->Tabs[l_p->cui_tab_p] != 0) {
+        CUI_DrawSelect(list->Tabs[l_p->cui_tab_p]->name, l_p->cui_select, select_style);
+    }
+    CUI_Refresh();
 }
 
 

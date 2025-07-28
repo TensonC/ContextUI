@@ -1,6 +1,6 @@
-#include "oled.h"
+#include "ContextUI_link.h"
 #include "ContextUI_draw.h"
-#include "oled_library.h"
+#include "ContextUI_library.h"
 #include "ContextUI.h"
 
 
@@ -407,19 +407,19 @@ static void CUI_SelectLine(u8 x,u8 y,u8 len)
 
 static void CUI_SelectDot(u8 y)
 {
-    CUI_SelectLine(1,y+7,2);
-    CUI_SelectLine(0,y+8,4);
-    CUI_SelectLine(0,y+9,4);
-    CUI_SelectLine(1,y+10,2);
+
+    CUI_SelectLine(0,y+8,2);
+    CUI_SelectLine(0,y+9,2);
+ 
 }
 
 static void CUI_SelectRect(u8 y,u8 len)
 {
     u8 i;
-    CUI_SelectLine(1,y,len-2);
-    CUI_SelectLine(1,y + 15,len-2);
+    CUI_SelectLine(2,y,len-2);
+    CUI_SelectLine(2,y + 15,len-2);
     for(i = 1;i < 15;i++) {
-        CUI_SelectLine(0,y + i,len);
+        CUI_SelectLine(1,y + i,len);
     }
 }
 
@@ -428,12 +428,14 @@ static void CUI_SelectRect(u8 y,u8 len)
  * @param tab 选择框选中的tab
  * @param position 该Tab所在位置 (0-3)
  */
-void CUI_DrawSelect(u8 len,u8 position,u8 select_style)
+void CUI_DrawSelect(const char* title,u8 position,u8 select_style)
 {
+    u8 len;
+    for(len = 0;*title++;len++);
     switch (select_style)
     {
     case SELECT_LINE:
-        CUI_SelectLine(0,(position * 2 + 1) * PAGE, (len+2) * 8);
+        CUI_SelectLine(0,(position + 1) * 2  * PAGE - 1, (len+2) * 8);
         break;
     case SELECT_POINT:
         CUI_SelectDot(position * 2 * PAGE);

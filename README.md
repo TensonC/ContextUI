@@ -4,18 +4,21 @@
 
 **纯C语言编写的轻量化UI，无任何附加库，可轻松移植**
 
-*由于目前手头资源限制，使用树莓派PICO进行开发，等完成后会抽象出来适配其他单片机*
+*由于目前手头资源限制，使用树莓派PICO进行开发，等有空会适配其他单片机*
 
 ---
 
 ## lib
 | 文件 | 内容 |
 | ---- | ---- |
+| main | 主函数所在文件 |
+| key | 按键检测，可换成任意按键检测，对应特定函数即可 |
+| demo.h | UI演示demo |
 | ContextUI | 核心文件，引用头文件即可编辑UI，包含界面指向，行为逻辑控制等 |
 | ContextUI_draw | 图形绘制库 |
 | ContextUI_build | 界面与组件构建 |
-| ContextUI_library(待完成) | ASCII码对照表，之后会引入中文输入 |
-| ContextUI_communication(待完成) | 抽象层的接口，配置该文件中的函数即可适配其他机型 |
+| ContextUI_library | ASCII码对照表，之后会引入中文输入 |
+| ContextUI_link | 抽象层的接口，配置该文件中的函数即可适配其他机型 |
 
 ## API
 (待完成)

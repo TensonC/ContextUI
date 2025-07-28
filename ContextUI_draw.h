@@ -25,6 +25,6 @@ void CUI_PutRect(u8 x1,u8 y1,u8 w,u8 h,u8 m);
 void CUI_ClearCircle(u8 x0,u8 y0,u8 r,u8 m);
 void CUI_ClearLine(u8 x_s,u8 y_s,u8 x_e,u8 y_e);
 void CUI_ClearRect(u8 x1,u8 y1,u8 w,u8 h,u8 m);
-void CUI_DrawSelect(u8 len,u8 position,u8 select_style);
+void CUI_DrawSelect(const char* title,u8 position,u8 select_style);
 
 #endif
