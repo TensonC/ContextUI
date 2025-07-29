@@ -1,3 +1,7 @@
+/*
+该文件中为UI主要逻辑
+*/
+
 #include "ContextUI.h"
 #include "ContextUI_draw.h"
 #include "ContextUI_build.h"
@@ -12,6 +16,8 @@
 #define CUI_SELECT (cui_stack[cui_layer].cui_select)
 //当前层数下的显示起始TAB
 #define CUI_START_TAB (cui_stack[cui_layer].start_tab)
+//当前Tab的widget指针
+#define CUI_WIDGET (CUI_LIST->Tabs[CUI_TAB]->link_widget)
 
 /*层级指针堆*/
 static CUI_LayerPointer cui_stack[MAX_LAYER];
@@ -112,6 +118,16 @@ static void CUI_ExitList()
 }
 
 /**
+ * @brief 进入进度条界面
+ * @param percent 
+ */
+static void CUI_EnterPercent(CUI_Widget* percent)
+{
+    CUI_BuildPercentWIndow(percent->respond_value);
+    cui_state = INWIN;
+}
+
+/**
  * @brief 确定操作
  */
 void CUI_Enter() {
@@ -127,15 +143,23 @@ void CUI_Enter() {
         //如果有son_list就进入该list 
         CUI_EnterList(CUI_LIST->Tabs[CUI_TAB]->son_list);
         //否则执行Tab关联的widget的响应函数
-        if(!CUI_LIST->Tabs[CUI_TAB]->link_widget) break;
-        if(!CUI_LIST->Tabs[CUI_TAB]->link_widget->respond) break;
-        CUI_LIST->Tabs[CUI_TAB]->link_widget->respond();
-        if(CUI_LIST->Tabs[CUI_TAB]->link_widget->widget_type != WIDGET_PAGE)
+        if(!CUI_WIDGET) break;
+        if(CUI_WIDGET->widget_type == WIDGET_PERCENTBAR)  
+            CUI_EnterPercent(CUI_LIST->Tabs[CUI_TAB]->link_widget);
+        if(!CUI_WIDGET->respond) break;
+            CUI_WIDGET->respond();
+        if(CUI_WIDGET->widget_type != WIDGET_PAGE && CUI_WIDGET->widget_type != WIDGET_PERCENTBAR)
             CUI_BuildList(&CUI_P);
         break;
         //在新页面中，执行新页面的确认键函数
     case INNEWPAGE:
         cui_page->enter();
+        break;
+    case INWIN:
+        if(CUI_WIDGET->respond)
+            CUI_WIDGET->respond();
+        CUI_BuildList(&CUI_P);
+        cui_state = (cui_layer == 1) ? INFIRSTLIST : INLIST;
         break;
     default:
         break;
@@ -156,6 +180,12 @@ void CUI_Exit() {
         //在新页面中返回其父列表或主菜单
     case INNEWPAGE:
         CUI_ExitPage();
+        break;
+    case INWIN:
+        if(CUI_WIDGET->respond)
+            CUI_WIDGET->respond();
+        CUI_BuildList(&CUI_P);
+        cui_state = (cui_layer == 1) ? INFIRSTLIST : INLIST;
         break;
     default:
         break;
@@ -196,6 +226,11 @@ void CUI_Leftward() {
     case INNEWPAGE:
         cui_page->left();
         break;
+    case INWIN:
+        if(CUI_WIDGET->respond_value <= 0) break;
+        CUI_WIDGET->respond_value--;
+        CUI_BuildPercentWIndow(CUI_WIDGET->respond_value);
+        break;
     default:
         break;
     }
@@ -212,9 +247,8 @@ void CUI_Rightward() {
             cui_app++;
         CUI_BuildMainMenu(cui_app);
         break;
-
     case INFIRSTLIST:
-    case INLIST: {
+    case INLIST: 
         // 不能再往上
         if (CUI_TAB == 0)
             break;
@@ -225,13 +259,15 @@ void CUI_Rightward() {
         } else if (CUI_START_TAB > 0) {
             CUI_START_TAB--;
         }
-
         CUI_BuildList(&CUI_P);
         break;
-    }
     case INNEWPAGE:
         cui_page->right();
         break;
+    case INWIN:
+        if(CUI_WIDGET->respond_value >= 100) break;
+        CUI_WIDGET->respond_value++;
+        CUI_BuildPercentWIndow(CUI_WIDGET->respond_value);
     default:
         break;
     }

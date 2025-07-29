@@ -62,6 +62,7 @@ struct CUI_App {
     const char* name;   //应用项目名
     const u8* Icon;     //应用项目图标(24*24 = 72)
     CUI_List* son_list; //应用下列表
+    void (*respond)();
 };
 
 struct CUI_Page

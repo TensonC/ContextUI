@@ -1,19 +1,21 @@
-#include "ContextUI_build.h"
-#include "ContextUI_draw.h"
-
-
 /*
 该文件中为UI所有物体的构建函数
 */
 
+#include "ContextUI_build.h"
+#include "ContextUI_draw.h"
 
-#define TITLE_LEFT_OFFEST 6     //标题的左侧偏移值
+
+#define CHAR_W 8                //一个字符的宽度
 #define WIDGET_RIGHT_OFFEST 25  //组件的右侧偏移值
+
 
 
 #define CHECKBOX_LEN 8  //复选框的边长
 #define DOT_R 3         //指示点的半径
 #define PERCENTBAR_H 6  //进度指示条的宽度
+#define PERCENTBAR_L 80 //进度指示条的长度
+#define WIN_H 34        //弹窗的高度
 
 #define DOT_SPACING 6   //主菜单应用指示点间距
 #define ICON_W 24
@@ -68,25 +70,25 @@ void CUI_BuildRRect(u8 x,u8 y,u8 w,u8 h)
 }
 
 /**
- * @brief 绘制略带弧形的实心框
+ * @brief 清除略带弧形的实心框
  * @param x 横坐标
  * @param y 纵坐标
  * @param w 宽
  * @param h 高
  */
-void CUI_BuildFillRRect(u8 x,u8 y,u8 w,u8 h)
+void CUI_ClearFillRRect(u8 x,u8 y,u8 w,u8 h)
 {
     u8 i;
-    CUI_PutLine(x + 3, y,     x + w - 3, y);
-    CUI_PutLine(x + 2, y + 1, x + w - 2, y + 1);
-    CUI_PutLine(x + 1, y + 2, x + w - 1, y + 2);
+    CUI_ClearLine(x + 3, y,     x + w - 3, y);
+    CUI_ClearLine(x + 2, y + 1, x + w - 2, y + 1);
+    CUI_ClearLine(x + 1, y + 2, x + w - 1, y + 2);
     for (i = y + 3; i <= y + h - 3; i++)
     {
-        CUI_PutLine(x, i, x + w, i);
+        CUI_ClearLine(x, i, x + w, i);
     }
-    CUI_PutLine(x + 1, y + h - 2, x + w - 1, y + h - 2);
-    CUI_PutLine(x + 2, y + h - 1, x + w - 2, y + h - 1);
-    CUI_PutLine(x + 3, y + h,     x + w - 3, y + h);
+    CUI_ClearLine(x + 1, y + h - 2, x + w - 1, y + h - 2);
+    CUI_ClearLine(x + 2, y + h - 1, x + w - 2, y + h - 1);
+    CUI_ClearLine(x + 3, y + h,     x + w - 3, y + h);
 }
 
 /**
@@ -151,14 +153,14 @@ void CUI_BuildNum(u8 x,u8 y,u16 num,u8 len)
  * @param x 横坐标
  * @param y 纵坐标
  * @param len 指示条长度
- * @param precent 进度百分比
+ * @param precent 进度值
  */
-void CUI_BuildPercentBar(u8 x,u8 y,u8 len,u8 percent)
+void CUI_BuildPercentBar(u8 x,u8 y,u8 len,u8 value)
 {
     u8 inner = len - 4;
     u16 per;
-    if (percent > 100) percent = 100;
-    per = (u16)percent * inner / 100;
+    if (value > 100) value = 100;
+    per = (u16)value * inner / 100;
     CUI_PutRect(x, y, len, PERCENTBAR_H, 0);
     if (per > 0) {
         CUI_PutRect(x + 2, y + 2, per, PERCENTBAR_H - 4, 1);
@@ -177,7 +179,7 @@ void CUI_BuildPercentBar(u8 x,u8 y,u8 len,u8 percent)
 static void CUI_BuildTab(CUI_Tab* tab,u8 col)
 {
     //绘制标题
-    CUI_PutStr_16(TITLE_LEFT_OFFEST,col,tab -> name);
+    CUI_PutStr_16(CHAR_W,col,tab -> name);
     //绘制组件
     if(!tab->link_widget)
         return;
@@ -193,7 +195,7 @@ static void CUI_BuildTab(CUI_Tab* tab,u8 col)
         break;
     case WIDGET_PERCENTBAR:
     case WIDGET_NUMBER:
-        CUI_BuildNum(SCREEN_W - 30,col,
+        CUI_BuildNum(SCREEN_W - 24,col,
         tab->link_widget->respond_value, 3);
         break;
     case WIDGET_STR:
@@ -201,7 +203,7 @@ static void CUI_BuildTab(CUI_Tab* tab,u8 col)
         tab->link_widget->widget_name);
         break;
     case WIDGET_PAGE:
-        CUI_PutChar_16(SCREEN_W - WIDGET_RIGHT_OFFEST,col,'>');
+        CUI_PutChar_16(SCREEN_W - 2 * CHAR_W,col,'>');
         break;
     default:
         break;
@@ -253,5 +255,17 @@ void CUI_BuildMainMenu(u8 current_app)
         else
             CUI_BuildDot(x, 4, 0);
     }
+    CUI_Refresh();
+}
+
+/**
+ * @brief 弹窗的构建
+ */
+void CUI_BuildPercentWIndow(u8 value)
+{
+    CUI_ClearFillRRect((SCREEN_W - PERCENTBAR_L) / 2 - 8 ,2 * PAGE + 2,PERCENTBAR_L + 16,WIN_H);
+    CUI_BuildRRect((SCREEN_W - PERCENTBAR_L) / 2 - 8 ,2 * PAGE + 2,PERCENTBAR_L + 16,WIN_H);
+    CUI_BuildPercentBar((SCREEN_W - PERCENTBAR_L) / 2,5 * PAGE,PERCENTBAR_L,value);
+    CUI_PutNum_16((SCREEN_W + PERCENTBAR_L) / 2 - 3 * CHAR_W,3,value,3);
     CUI_Refresh();
 }

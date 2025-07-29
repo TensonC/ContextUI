@@ -1,4 +1,8 @@
-#include "ContextUI_link.h"
+/*
+该文件中为画图函数
+*/
+
+#include "base.h"
 #include "ContextUI_draw.h"
 #include "ContextUI_library.h"
 #include "ContextUI.h"
@@ -8,7 +12,7 @@
 static u8 GRAM[PAGE][SCREEN_W];
 //选择框与进度指示缓冲区
 static u8 GRAM2[PAGE][SCREEN_W];
-static u16 Pow10[] = {
+static const u16 Pow10[] = {
  1,10,100,1000,10000
 };
 
@@ -112,11 +116,21 @@ void CUI_PutStr_16(u8 x,u8 y,const char* str)
  * @param num 数字
  * @param len 数字长度
  */
+
 void CUI_PutNum_16(u8 x,u8 y, u16 num, u8 len)
 {
+    u8 no_zero = 0;
+    u8 dig;
     while(len--)
     {
-        CUI_PutChar_16(x,y,num / Pow10[len] % 10 + '0');
+        dig = num / Pow10[len] % 10;
+        if(dig == 0 && !no_zero && len != 0) {
+            CUI_PutChar_16(x,y,' ');
+        }
+        else {
+            CUI_PutChar_16(x,y,num / Pow10[len] % 10 + '0');
+            no_zero = 1;
+        }
         x += 8;
     }
 }
@@ -158,6 +172,7 @@ void CUI_PutPoint(u8 x,u8 y)
  */
 void CUI_ClearPoint(u8 x,u8 y)
 {
+    GRAM2[y / 8][x] &= ~(0x01 << (y % 8));
     GRAM[y / 8][x] &= ~(0x01 << (y % 8));
 }
 
@@ -416,10 +431,10 @@ static void CUI_SelectDot(u8 y)
 static void CUI_SelectRect(u8 y,u8 len)
 {
     u8 i;
-    CUI_SelectLine(2,y,len-2);
-    CUI_SelectLine(2,y + 15,len-2);
+    CUI_SelectLine(6,y,len-2);
+    CUI_SelectLine(6,y + 15,len-2);
     for(i = 1;i < 15;i++) {
-        CUI_SelectLine(1,y + i,len);
+        CUI_SelectLine(5,y + i,len);
     }
 }
 
@@ -435,13 +450,13 @@ void CUI_DrawSelect(const char* title,u8 position,u8 select_style)
     switch (select_style)
     {
     case SELECT_LINE:
-        CUI_SelectLine(0,(position + 1) * 2  * PAGE - 1, (len+2) * 8);
+        CUI_SelectLine(6,(position + 1) * 2  * PAGE - 1, len * 8 + 5);
         break;
     case SELECT_POINT:
         CUI_SelectDot(position * 2 * PAGE);
         break;
     case SELECT_RECT:
-        CUI_SelectRect(position * PAGE * 2, (len + 2) * 8);
+        CUI_SelectRect(position * PAGE * 2, len  * 8 + 5);
         break;
     default:
         break;

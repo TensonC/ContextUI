@@ -1,5 +1,5 @@
-#ifndef _CONTEXTUI_LINK_H_
-#define _CONTEXTUI_LINK_H_
+#ifndef _BASE_H_
+#define _BASE_H_
 
 #include "all.h"
 
