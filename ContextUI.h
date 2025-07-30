@@ -68,12 +68,8 @@ struct CUI_App {
 struct CUI_Page
 {
     void (*fun)();
-    void (*enter)();
-    void (*left)();
-    void (*right)();
+    void (*control[4])();//enter,exit,left,right
 };
-
-
 
 /*层级指针结构体，负责确定当前打开页面的各种层级*/
 struct CUI_LayerPointer

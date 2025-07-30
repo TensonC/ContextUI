@@ -99,8 +99,8 @@ void CUI_EnterPage(CUI_Page* page)
 static void CUI_ExitPage()
 {
     cui_page = 0;
-    cui_state = (cui_layer == 1) ? INFIRSTLIST : INLIST;
-    CUI_BuildList(&CUI_P);
+    cui_state = (cui_layer == 0) ? MAINMENU :  (cui_layer == 1) ? INFIRSTLIST : INLIST;
+    (cui_layer == 0) ? CUI_BuildMainMenu(cui_app) : CUI_BuildList(&CUI_P);
 }
 
 /**
@@ -135,7 +135,10 @@ void CUI_Enter() {
     {
         //在主菜单时确定键执行应用响应函数或进入列表
     case MAINMENU:
-        CUI_EnterList(MainMenu[cui_app].son_list);
+        if(MainMenu[cui_app].son_list)
+            CUI_EnterList(MainMenu[cui_app].son_list);
+        if(MainMenu[cui_app].respond)
+            MainMenu[cui_app].respond();
         break;
         //在列表中时，确定键响应当前Tab中的函数或进入列表
     case INFIRSTLIST:
@@ -153,7 +156,8 @@ void CUI_Enter() {
         break;
         //在新页面中，执行新页面的确认键函数
     case INNEWPAGE:
-        cui_page->enter();
+        if(cui_page->control[0])
+            cui_page->control[0]();
         break;
     case INWIN:
         if(CUI_WIDGET->respond)
@@ -179,6 +183,8 @@ void CUI_Exit() {
         break;
         //在新页面中返回其父列表或主菜单
     case INNEWPAGE:
+        if(cui_page->control[1])
+            cui_page->control[1]();
         CUI_ExitPage();
         break;
     case INWIN:
@@ -195,7 +201,7 @@ void CUI_Exit() {
 
 
 /**
- * @brief 向下移动光标或向左滚动列表
+ * @brief 向上移动光标或向左滚动列表
  */
 void CUI_Leftward() {
     switch (cui_state)
@@ -209,6 +215,46 @@ void CUI_Leftward() {
         //列表中向下移动
     case INFIRSTLIST:
     case INLIST:
+        // 不能再往上
+        if (CUI_TAB == 0)
+            break;
+        CUI_TAB--;
+        // 判断移动光标 还是 滚动窗口
+        if (CUI_SELECT > 0) {
+            CUI_SELECT--;
+        } else if (CUI_START_TAB > 0) {
+            CUI_START_TAB--;
+        }
+        CUI_BuildList(&CUI_P);
+        break;
+        //新建页中执行对应函数
+    case INNEWPAGE:
+        if(cui_page->control[2])
+            cui_page->control[2]();
+        break;
+    case INWIN:
+        if(CUI_WIDGET->respond_value <= 0) break;
+        CUI_WIDGET->respond_value--;
+        CUI_BuildPercentWIndow(CUI_WIDGET->respond_value);
+        break;
+    default:
+        break;
+    }
+}
+
+/**
+ * @brief 向下移动光标或右滚动列表
+ */
+void CUI_Rightward() {
+    switch (cui_state)
+    {
+    case MAINMENU:
+        if (cui_app < APP_NUM - 1)
+            cui_app++;
+        CUI_BuildMainMenu(cui_app);
+        break;
+    case INFIRSTLIST:
+    case INLIST: 
         // 判断是否还有下一个Tab
         if (!CUI_LIST->Tabs[CUI_TAB+ 1])
             break;
@@ -222,47 +268,9 @@ void CUI_Leftward() {
         }
         CUI_BuildList(&CUI_P);
         break;
-        //新建页中执行对应函数
     case INNEWPAGE:
-        cui_page->left();
-        break;
-    case INWIN:
-        if(CUI_WIDGET->respond_value <= 0) break;
-        CUI_WIDGET->respond_value--;
-        CUI_BuildPercentWIndow(CUI_WIDGET->respond_value);
-        break;
-    default:
-        break;
-    }
-}
-
-/**
- * @brief 向上移动光标或滚动列表
- */
-void CUI_Rightward() {
-    switch (cui_state)
-    {
-    case MAINMENU:
-        if (cui_app < APP_NUM - 1)
-            cui_app++;
-        CUI_BuildMainMenu(cui_app);
-        break;
-    case INFIRSTLIST:
-    case INLIST: 
-        // 不能再往上
-        if (CUI_TAB == 0)
-            break;
-        CUI_TAB--;
-        // 判断移动光标 还是 滚动窗口
-        if (CUI_SELECT > 0) {
-            CUI_SELECT--;
-        } else if (CUI_START_TAB > 0) {
-            CUI_START_TAB--;
-        }
-        CUI_BuildList(&CUI_P);
-        break;
-    case INNEWPAGE:
-        cui_page->right();
+        if(cui_page->control[3])
+            cui_page->control[3]();
         break;
     case INWIN:
         if(CUI_WIDGET->respond_value >= 100) break;
